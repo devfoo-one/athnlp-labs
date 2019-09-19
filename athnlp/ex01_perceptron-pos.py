@@ -4,7 +4,7 @@ import numpy as np
 corpus = BrownPosTag()
 dict_size = len(corpus.dictionary.x_dict.names)
 label_size = len(corpus.dictionary.y_dict)
-weights = [np.random.rand(dict_size).reshape(-1, 1) for _ in range(0, label_size)]
+weights = [np.zeros(dict_size).reshape(-1, 1) for _ in range(0, label_size)]
 
 
 def get_token_vector(token_index) -> np.array:

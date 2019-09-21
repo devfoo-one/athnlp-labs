@@ -38,42 +38,43 @@ def update_weights(label_gold, label_pred, token_vector):
     weights[label_pred] -= token_vector
     weights[label_gold] += token_vector
 
-for epoch in range(1, 100):
-    np.random.shuffle(corpus.train)
-    for sentence in corpus.train:
-        for token, label in zip(sentence.x, sentence.y):
-            token_vector = get_token_vector(token)
-            label_vector_gold = get_label_vector(label)
-            label_vector_pred = predict_label_vector(token_vector)
-            label_gold = int(np.argmax(label_vector_gold))
-            label_pred = int(np.argmax(label_vector_pred))
-            if label_gold is not label_pred:
-                update_weights(label_gold, label_pred, token_vector)
-    ## EVAL
-    token_count = 0
-    error_count = 0
-    for sentence in corpus.test:
-        for token, label in zip(sentence.x, sentence.y):
-            token_count += 1
-            token_vector = get_token_vector(token)
-            label_vector_gold = get_label_vector(label)
-            label_gold = int(np.argmax(label_vector_gold))
-            label_pred = int(np.argmax(predict_label_vector(token_vector)))
-            if label_gold is not label_pred:
-                error_count += 1
-    accuracy_test = (token_count - error_count) / token_count
+if __name__ == "__main__":
+    for epoch in range(1, 100):
+        np.random.shuffle(corpus.train)
+        for sentence in corpus.train:
+            for token, label in zip(sentence.x, sentence.y):
+                token_vector = get_token_vector(token)
+                label_vector_gold = get_label_vector(label)
+                label_vector_pred = predict_label_vector(token_vector)
+                label_gold = int(np.argmax(label_vector_gold))
+                label_pred = int(np.argmax(label_vector_pred))
+                if label_gold is not label_pred:
+                    update_weights(label_gold, label_pred, token_vector)
+        ## EVAL
+        token_count = 0
+        error_count = 0
+        for sentence in corpus.test:
+            for token, label in zip(sentence.x, sentence.y):
+                token_count += 1
+                token_vector = get_token_vector(token)
+                label_vector_gold = get_label_vector(label)
+                label_gold = int(np.argmax(label_vector_gold))
+                label_pred = int(np.argmax(predict_label_vector(token_vector)))
+                if label_gold is not label_pred:
+                    error_count += 1
+        accuracy_test = (token_count - error_count) / token_count
 
-    token_count = 0
-    error_count = 0
-    for sentence in corpus.dev:
-        for token, label in zip(sentence.x, sentence.y):
-            token_count += 1
-            token_vector = get_token_vector(token)
-            label_vector_gold = get_label_vector(label)
-            label_gold = int(np.argmax(label_vector_gold))
-            label_pred = int(np.argmax(predict_label_vector(token_vector)))
-            if label_gold is not label_pred:
-                error_count += 1
-    accuracy_dev = (token_count - error_count) / token_count
+        token_count = 0
+        error_count = 0
+        for sentence in corpus.dev:
+            for token, label in zip(sentence.x, sentence.y):
+                token_count += 1
+                token_vector = get_token_vector(token)
+                label_vector_gold = get_label_vector(label)
+                label_gold = int(np.argmax(label_vector_gold))
+                label_pred = int(np.argmax(predict_label_vector(token_vector)))
+                if label_gold is not label_pred:
+                    error_count += 1
+        accuracy_dev = (token_count - error_count) / token_count
 
-    print("epoch: {}, acc_test: {}, acc_dev: {}".format(epoch, accuracy_test, accuracy_dev))
+        print("epoch: {}, acc_test: {}, acc_dev: {}".format(epoch, accuracy_test, accuracy_dev))

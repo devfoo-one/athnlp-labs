@@ -49,43 +49,43 @@ def update_weights(label_gold, label_pred, token_vector):
 def accuracy(correct, total):
     return correct / total
 
-
-for epoch in range(1, 11):
-    np.random.shuffle(corpus.train)
-    for sentence in tqdm(corpus.train[:1000], desc="training epoch {}".format(epoch)):
-
-
-
-
-        previous_label = None
-        for token, label in zip(sentence.x, sentence.y):
-            for hyp_label in range(0, num_labels):
-                token_vector = get_feature_vector_for_token(token, previous_label)
-                label_gold = int(np.argmax(get_label_vector(label)))
-                label_pred = int(np.argmax(predict_label_vector(token_vector)))
-                if label_gold is not label_pred:
-                    update_weights(label_gold, label_pred, token_vector)
-                previous_label = label_pred
+if __name__ == "__main__":
+    for epoch in range(1, 11):
+        np.random.shuffle(corpus.train)
+        for sentence in tqdm(corpus.train[:1000], desc="training epoch {}".format(epoch)):
 
 
 
-        for hypothesis_idx in range(0, num_labels ** len(sentence.x)):
 
-            token_idx = np.math.floor(hypothesis_idx / 12)
-
-        # TODO ALL POSSIBLE HYPOTHESES
-        for token_idx in range(0, len(sentence.x)):
             previous_label = None
-            for label_idx in range(0, num_labels):
-                token_vector = get_feature_vector_for_token(token_idx, previous_label)
-                label_gold = int(np.argmax(get_label_vector(label)))
-                label_pred = int(np.argmax(predict_label_vector(token_vector)))
-                if label_gold is not label_pred:
-                    update_weights(label_gold, label_pred, token_vector)
-                previous_label = label_pred
+            for token, label in zip(sentence.x, sentence.y):
+                for hyp_label in range(0, num_labels):
+                    token_vector = get_feature_vector_for_token(token, previous_label)
+                    label_gold = int(np.argmax(get_label_vector(label)))
+                    label_pred = int(np.argmax(predict_label_vector(token_vector)))
+                    if label_gold is not label_pred:
+                        update_weights(label_gold, label_pred, token_vector)
+                    previous_label = label_pred
 
 
 
-        for token, label in zip(sentence.x, sentence.y):
-            token_vector = get_feature_vector_for_token(token, previous_label)
+            for hypothesis_idx in range(0, num_labels ** len(sentence.x)):
+
+                token_idx = np.math.floor(hypothesis_idx / 12)
+
+            # TODO ALL POSSIBLE HYPOTHESES
+            for token_idx in range(0, len(sentence.x)):
+                previous_label = None
+                for label_idx in range(0, num_labels):
+                    token_vector = get_feature_vector_for_token(token_idx, previous_label)
+                    label_gold = int(np.argmax(get_label_vector(label)))
+                    label_pred = int(np.argmax(predict_label_vector(token_vector)))
+                    if label_gold is not label_pred:
+                        update_weights(label_gold, label_pred, token_vector)
+                    previous_label = label_pred
+
+
+
+            for token, label in zip(sentence.x, sentence.y):
+                token_vector = get_feature_vector_for_token(token, previous_label)
 

@@ -38,7 +38,8 @@ def update_weights(label_gold, label_pred, token_vector):
     weights[label_pred] -= token_vector
     weights[label_gold] += token_vector
 
-for epoch in range(1, 11):
+for epoch in range(1, 100):
+    np.random.shuffle(corpus.train)
     for sentence in corpus.train:
         for token, label in zip(sentence.x, sentence.y):
             token_vector = get_token_vector(token)

@@ -78,6 +78,7 @@ class FEVERTextClassificationModel(Model):
         embeddings_evidence_avg = torch.div(embeddings_evidence.sum(dim=1).transpose(0, 1), num_tokens_evidence.float()).transpose(0, 1)
         embeddings_claim_avg_projection = 0 # TODO project the arbitrary long BoW vector down to a fixed dimension size to use our model with a fixed input size again
         # torch.div expects to divide the first dimension, so we need to transpose and transpose back!
+        embeddings_evidence_avg_projection = 0
         features = torch.cat((embeddings_claim_avg_projection, embeddings_evidence_avg_projection), dim=1)
         label_logits = self._feed_forward(features)
         label_probs = F.softmax(label_logits, dim=-1)

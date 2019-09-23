@@ -3,15 +3,19 @@ import math
 import time
 
 import torch
+from torch import optim
+from torch.nn import CrossEntropyLoss
 
 from athnlp.readers.lm_corpus import Corpus
+
+from athnlp.models.rnn_language_model import RNNModel
 
 parser = argparse.ArgumentParser(description='RNN/LSTM Language Model')
 parser.add_argument('--data', type=str, default='data/lm',
                     help='location of the data corpus')
 parser.add_argument('--model_type', type=str, default='LSTM',
                     help='type of recurrent net (RNN_TANH, RNN_RELU, LSTM, GRU)')
-parser.add_argument("--model_path", type=str, default='models/lm/default.pt',
+parser.add_argument("--model_path", type=str, default='athnlp/models/lm/default.pt',
                     help='Path where to store the trained language model.')
 parser.add_argument('--emsize', type=int, default=50,
                     help='size of word embeddings')
@@ -136,7 +140,8 @@ def train(model, criterion, corpus, train_data, lr, bptt, epoch):
     :return: Average training loss
     """
     # Turn on training mode which enables dropout.
-    model.train()
+    model.train()  # devfoo: tells pytorch to perform expensive gradient calculations (not needed for inference)
+    optimizer = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
     total_loss = 0.
     start_time = time.time()
     ntokens = len(corpus.dictionary)
@@ -148,11 +153,12 @@ def train(model, criterion, corpus, train_data, lr, bptt, epoch):
         model.zero_grad()
         hidden = repackage_hidden(hidden)
         # TODO: run model forward pass obtaining '(output, hidden)'
-        output, hidden = None, None
+        output, hidden = model.forward(data, hidden)
         # TODO: compute loss using the defined criterion obtaining 'loss'.
-        loss = None
+        loss = criterion(output.view(-1, ntokens), targets)
         # TODO: compute backpropagation calling the backward pass
-
+        loss.backward()
+        optimizer.step()
         # TODO (optional): implement gradient clipping to prevent
         # the exploding gradient problem in RNNs / LSTMs
         # check the PyTorch function `clip_grad_norm`
@@ -200,8 +206,13 @@ def main(args):
         # Build the model
         ###############################################################################
         # TODO: model definition and loss definition
-        model = None
-        criterion = None
+        model = RNNModel(
+            rnn_type=args.model_type,
+            ninp=args.emsize,
+            nhid=args.nhid,
+            nlayers=args.nlayers,
+            ntoken=len(corpus.dictionary))
+        criterion = CrossEntropyLoss()  # devfoo: most certainly cross entropy
 
         # Loop over epochs.
         lr = args.lr
@@ -259,6 +270,10 @@ def main(args):
         ###############################################################################
         # TODO: Sentence completion solution
 
+        print('yay')
+        model = model.eval()
+
+        model.forward()
 
 if __name__ == "__main__":
     args = parser.parse_args()

@@ -34,6 +34,7 @@ class RNNModel(nn.Module):
         self.rnn_type = rnn_type
         self.nhid = nhid
         self.nlayers = nlayers
+        self.softmax = nn.LogSoftmax(dim=1)
 
     def init_weights(self):
         """
@@ -57,6 +58,14 @@ class RNNModel(nn.Module):
         :param hidden: previous hidden state of the RNN language model
         :return: output of the model
         """
+        embeddings = self.encoder(input)
+        output, hidden = self.rnn(embeddings, hidden)
+        decoded = self.decoder(output)
+        return decoded.squeeze(1), hidden
+
+
+    def predict(self, input):
+        # TODO implement a predict method or use the forward method with a filter on model.train() ?
         pass
 
     def init_hidden(self, bsz):

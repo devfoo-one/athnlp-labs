@@ -18,24 +18,25 @@
       }
     }
   },
-  "train_data_path": "data/multi30k/val.lc.norm.tok.head-750",
-  "validation_data_path": "data/multi30k/val.lc.norm.tok.head-250",
+  "train_data_path": "data/multi30k/val.lc.norm.tok.head-5",
+  "validation_data_path": "data/multi30k/val.lc.norm.tok.head-5",
   "model": {
     "type": "nmt_seq2seq",
     "source_embedder": {
       "token_embedders": {
         "source_tokens": {
             "type": "embedding",
+            "pretrained_file": "resources/glove.6B.50d.txt.gz",
             "embedding_dim": 50,
-            "trainable": true,
+            "trainable": false,
             "vocab_namespace": "source_tokens"
         }
       }
     },
     "target_namespace": "target_tokens",
-//    "attention" : {
-//      "type" : "dot_product"
-//    },
+    "attention" : {
+      "type" : "dot_product"
+    },
     "encoder": {
       "type": "lstm",
       "input_size": 50,
@@ -46,7 +47,7 @@
     },
     "decoder": {
       "type": "lstm",
-      "input_size": 50,
+      "input_size": 450,
       "hidden_size": 400
     },
     "max_decoding_steps": 15,
@@ -64,9 +65,9 @@
   },
   "trainer": {
     "optimizer": "adam",
-    "num_epochs": 100,
-    "patience": 10,
-    "validation_metric": "-loss",
+    "num_epochs": 500,
+    "patience": 20,
+    "validation_metric": "+BLEU",
     "cuda_device": -1
   }
 }

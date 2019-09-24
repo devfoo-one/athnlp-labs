@@ -409,7 +409,9 @@ class NmtSeq2Seq(Model):
         embedded_input = self._target_embedder(last_predictions)
 
         # TODO: Compute attention right about here...
-        decoder_input = embedded_input
+        attended_input, _ = self._compute_attention(decoder_hidden, encoder_outputs, source_mask)
+
+        decoder_input = torch.cat((embedded_input, attended_input), -1)
 
         # shape (decoder_hidden): (batch_size, decoder_output_dim)
         # shape (decoder_context): (batch_size, decoder_output_dim)
@@ -462,8 +464,12 @@ class NmtSeq2Seq(Model):
         encoder_outputs_mask = encoder_outputs_mask.float()
 
         # Main body of attention weights computation here
+        attention_scores = encoder_outputs.bmm(decoder_hidden_state.unsqueeze(-1)).squeeze(-1)
+        masked_attention_scores = masked_softmax(attention_scores, encoder_outputs_mask)
+        attended_output = util.weighted_sum(encoder_outputs, masked_attention_scores)
 
-        return None
+        # masked_softmax()
+        return attended_output, masked_attention_scores
 
     @staticmethod
     def _get_loss(logits: torch.LongTensor,

@@ -56,7 +56,7 @@ class RNNModel(nn.Module):
 
         :param input: input features
         :param hidden: previous hidden state of the RNN language model
-        :return: output of the model
+        :return: (output, updated_hidden_state)
         """
         embeddings = self.encoder(input)
         output, hidden = self.rnn(embeddings, hidden)

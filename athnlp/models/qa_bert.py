@@ -1,12 +1,16 @@
 from typing import Dict, Optional
 
+import allennlp
 import torch
 from allennlp.data.vocabulary import Vocabulary
 from allennlp.models.model import Model
 from allennlp.nn import RegularizerApplicator
 from allennlp.nn.initializers import InitializerApplicator
+from allennlp.nn.util import masked_softmax
+from allennlp.training.metrics import CategoricalAccuracy, BooleanAccuracy
 from overrides import overrides
 from pytorch_transformers.modeling_bert import BertModel
+from torch.nn import CrossEntropyLoss
 
 
 @Model.register("qa_bert")
@@ -59,11 +63,18 @@ class BertQuestionAnswering(Model):
         for param in self.bert_model.parameters():
             param.requires_grad = trainable
 
-        # 1. Instantiate any additional parts of your network
+        # TODO 1. Instantiate any additional parts of your network
+        self.drop = torch.nn.Dropout(p=dropout)
+        self.encoded2start_index = torch.nn.Linear(self.bert_model.config.hidden_size, 1)
+        self.encoded2end_index = torch.nn.Linear(self.bert_model.config.hidden_size, 1)
 
-        # 2. DON'T FORGET TO INITIALIZE the additional parts of your network.
+        # TODO 2. DON'T FORGET TO INITIALIZE the additional parts of your network.
+        initializer(self)
+        # TODO 3. Instantiate your metrics
+        self.start_acc = CategoricalAccuracy()
+        self.end_acc = CategoricalAccuracy()
+        self.span_acc = BooleanAccuracy()
 
-        # 3. Instantiate your metrics
 
     def forward(self,  # type: ignore
                 metadata: Dict,
@@ -106,17 +117,32 @@ class BertQuestionAnswering(Model):
         input_mask = (input_ids != 0).long()
 
         # 1. Build model here
+        # TODO run tokens through bert model
+        last_hidden_state, pooler_output = self.bert_model(
+            input_ids=input_ids,
+            token_type_ids=token_type_ids)
+        # TODO take encoded representations and pass through linear layers
+        start_logits = self.encoded2start_index(last_hidden_state).squeeze(-1)
+        end_logits = self.encoded2end_index(last_hidden_state).squeeze(-1)
 
         # 2. Compute start_position and end_position and then get the best span
         # using allennlp.models.reading_comprehension.util.get_best_span()
+        question_mask = token_type_ids.clone()
+        start_probabilities = masked_softmax(start_logits, (input_mask * question_mask).float(), dim=-1)
+        end_probabilities = masked_softmax(end_logits, (input_mask * question_mask).float(), dim=-1)
+
+        best_span = allennlp.models.reading_comprehension.util.get_best_span(start_probabilities, end_probabilities)
 
         output_dict = {}
 
         # 4. Compute loss and accuracies. You should compute at least:
         # span_start accuracy, span_end accuracy and full span accuracy.
-
-        # UNCOMMENT THIS LINE
-        # output_dict["loss"] =
+        if span_start is not None and span_end is not None:
+            # TODO devfoo: i think this is wrong, we should get the probabilities of the gold_scores
+            #  and put them into the accuracy functions
+            span_start_loss = self.start_acc(start_probabilities.argmax(dim=-1), span_start.squeeze(-1), input_mask)
+            span_end_loss = self.end_acc(end_probabilities.argmax(dim=-1), span_end.squeeze(-1), input_mask)
+            output_dict["loss"] = span_start_loss + span_end_loss
 
         # 5. Optionally you can compute the official squad metrics (exact match, f1).
         # Instantiate the metric object in __init__ using allennlp.training.metrics.SquadEmAndF1()
@@ -131,6 +157,7 @@ class BertQuestionAnswering(Model):
         Does a simple argmax over the probabilities, converts index to string label, and
         add ``"label"`` key to the dictionary with the result.
         """
+        # TODO do stuff here
         pass
 
     def get_metrics(self, reset: bool = False) -> Dict[str, float]:
